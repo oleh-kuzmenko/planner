@@ -5,43 +5,43 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        Scanner scanner = new Scanner(System.in);
-        System.out.println("=== СИСТЕМА КАЛЕНДАРНОГО ПЛАНУВАННЯ ===");
+        try (Scanner scanner = new Scanner(System.in)) {
+            System.out.println("=== СИСТЕМА КАЛЕНДАРНОГО ПЛАНУВАННЯ ===");
 
-        List<RepairTask> tasks = new ArrayList<>();
-        tasks.add(new RepairTask(1, new double[]{4, 6, 3}, 1, 4));
-        tasks.add(new RepairTask(2, new double[]{3, 2, 5}, 1, 3));
-        tasks.add(new RepairTask(3, new double[]{7, 1, 1}, 2, 5));
-        tasks.add(new RepairTask(4, new double[]{1, 3, 6}, 2, 6));
-        tasks.add(new RepairTask(5, new double[]{5, 3, 4}, 3, 5));
+            List<RepairTask> tasks = new ArrayList<>();
+            tasks.add(new RepairTask(1, new double[] { 4, 6, 3 }, 1, 4));
+            tasks.add(new RepairTask(2, new double[] { 3, 2, 5 }, 1, 3));
+            tasks.add(new RepairTask(3, new double[] { 7, 1, 1 }, 2, 5));
+            tasks.add(new RepairTask(4, new double[] { 1, 3, 6 }, 2, 6));
+            tasks.add(new RepairTask(5, new double[] { 5, 3, 4 }, 3, 5));
 
-        System.out.print("Введіть ліміт ресурсів Tk: ");
-        while (!scanner.hasNextDouble()) {
-            System.out.println("Помилка! Введіть число.");
-            scanner.next();
+            System.out.print("Введіть ліміт ресурсів Tk: ");
+            while (!scanner.hasNextDouble()) {
+                System.out.println("Помилка! Введіть число.");
+                scanner.next();
+            }
+            double limitTk = scanner.nextDouble();
+
+            if (limitTk < 0) {
+                System.out.println("Ліміт не може бути від'ємним.");
+                return;
+            }
+
+            System.out.println("-> Розрахунок для ліміту: " + limitTk);
+
+            // Масив сценаріїв для послідовного виконання
+            Scenario[] scenarios = {
+                    Scenario.CRISP,
+                    Scenario.FUZZY_OPTIMISTIC,
+                    Scenario.FUZZY_PESSIMISTIC
+            };
+
+            for (Scenario sc : scenarios) {
+                solveAndPrint(tasks, limitTk, sc);
+            }
+
+            System.out.println("\nРоботу завершено.");
         }
-        double limitTk = scanner.nextDouble();
-
-        if (limitTk < 0) {
-            System.out.println("Ліміт не може бути від'ємним.");
-            return;
-        }
-
-        System.out.println("-> Розрахунок для ліміту: " + limitTk);
-
-        // Масив сценаріїв для послідовного виконання
-        Scenario[] scenarios = {
-            Scenario.CRISP, 
-            Scenario.FUZZY_OPTIMISTIC, 
-            Scenario.FUZZY_PESSIMISTIC
-        };
-
-        for (Scenario sc : scenarios) {
-            solveAndPrint(tasks, limitTk, sc);
-        }
-
-        System.out.println("\nРоботу завершено.");
-        scanner.close();
     }
 
     private static void solveAndPrint(List<RepairTask> tasks, double limit, Scenario scenario) {
@@ -50,7 +50,8 @@ public class Main {
         System.out.println("=".repeat(60));
 
         // Скидання стану перед новим розрахунком
-        for (RepairTask t : tasks) t.setStartWeek(0);
+        for (RepairTask t : tasks)
+            t.setStartWeek(0);
 
         Solver solver = new Solver(tasks, limit, scenario);
         boolean success = solver.solve();
@@ -65,7 +66,7 @@ public class Main {
     }
 
     private static void printProfessionalGantt(List<RepairTask> tasks, double limit, Scenario sc) {
-        int horizon = 9; 
+        int horizon = 9;
         String colFormat = "%-7s|";
         String numFormat = "%-7.2f|";
         String emptyFormat = "       |";
@@ -85,7 +86,7 @@ public class Main {
             System.out.printf(" #%-5d |", t.getId());
 
             int start = t.getStartWeek();
-            int duration = 3; 
+            int duration = 3;
 
             for (int w = 1; w <= horizon; w++) {
                 if (w >= start && w < start + duration) {
@@ -103,8 +104,9 @@ public class Main {
         System.out.print(" ВСЬОГО |");
         for (int w = 1; w <= horizon; w++) {
             double sum = 0;
-            for (RepairTask t : tasks) sum += t.getCostAtWeek(w, sc);
-            
+            for (RepairTask t : tasks)
+                sum += t.getCostAtWeek(w, sc);
+
             // Якщо є мінімальне перевищення (похибка округлення), підсвічуємо
             if (sum > limit + 0.001) {
                 System.out.printf("%-7.2f|", sum); // Можна додати "!" якщо потрібно

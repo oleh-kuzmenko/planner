@@ -21,14 +21,11 @@ public class RepairTask {
         if (weekIndex >= 0 && weekIndex < resourceCost.length) {
             double baseVal = resourceCost[weekIndex];
             // Використання класу FuzzyNumber для розрахунку меж
-            switch (scenario) {
-                case CRISP:
-                    return baseVal;
-                case FUZZY_OPTIMISTIC:
-                    return FuzzyNumber.getInterval(baseVal, 0.8)[0];
-                case FUZZY_PESSIMISTIC:
-                    return FuzzyNumber.getInterval(baseVal, 0.8)[1];
-            }
+            return switch (scenario) {
+                case CRISP -> baseVal;
+                case FUZZY_OPTIMISTIC -> FuzzyNumber.getInterval(baseVal, 0.8)[0];
+                case FUZZY_PESSIMISTIC -> FuzzyNumber.getInterval(baseVal, 0.8)[1];
+            };
         }
         return 0;
     }
